@@ -24,7 +24,7 @@ contract MockERC20 {
     function transfer(address _to, uint _amount)
     external returns (bool) {
         if(fail) return false;
-        if(revert_) revert();
+        require(!revert_);
 
         to = _to;
         amount = _amount;
@@ -34,12 +34,19 @@ contract MockERC20 {
     function transferFrom(address _owner, address _to, uint _amount)
     external returns (bool) {
         if(fail) return false;
-        if(revert_) revert();
+        require(!revert_);
 
         owner = _owner;
         to = _to;
         amount = _amount;
         return true;
+    }
+
+    function decimals()
+    external view returns (uint8) {
+        require(!revert_);
+
+        return 18;
     }
 }
 
@@ -58,5 +65,10 @@ contract LibUser {
         uint amount
     ) external {
         token.safeTokenTransferFrom(owner, to, amount);
+    }
+
+    function decimals(address token)
+    external view returns (uint8) {
+        return token.safeDecimals();
     }
 }

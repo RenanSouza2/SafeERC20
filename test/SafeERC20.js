@@ -6,18 +6,18 @@ async function waitTx(txPromisse) {
 }
 
 describe('Test SafeERC20', async function () {
-  let ERC20;
+  let MockERC20;
   let LibUser;
   let libUser;
 
-  let erc20;
+  let mockERC20;
   let owner;
   let to;
   let amount;
 
   before(async function () {
     LibUser = await ethers.getContractFactory('LibUser');
-    ERC20 = await ethers.getContractFactory('MockERC20');
+    MockERC20 = await ethers.getContractFactory('MockERC20');
 
     libUser = await LibUser.deploy();
     await libUser.deployed();
@@ -29,58 +29,71 @@ describe('Test SafeERC20', async function () {
   });
 
   beforeEach(async function () {
-    erc20 = await ERC20.deploy();
-    await erc20.deployed();
+    mockERC20 = await MockERC20.deploy();
+    await mockERC20.deployed();
   });
   
   describe('transfer', async function () {
     it('Transfer done', async function () {
-      await waitTx(libUser.transfer(erc20.address, to, amount));
+      await waitTx(libUser.transfer(mockERC20.address, to, amount));
 
-      const _to = await erc20.to();
+      const _to = await mockERC20.to();
       expect(_to).equal(to);
 
-      const _amount = await erc20.amount();
+      const _amount = await mockERC20.amount();
       expect(_amount).equal(amount);
     });
 
     it('Fail', async function () {
-      await waitTx(erc20.setFail(true));
-      const tx = libUser.transfer(erc20.address, to, amount);
-      await expect(tx).revertedWith('Token transfer not successfull');
+      await waitTx(mockERC20.setFail(true));
+      const tx = libUser.transfer(mockERC20.address, to, amount);
+      await expect(tx).revertedWith('Token transfer not successful');
     });
 
     it('Revert', async function () {
-      await waitTx(erc20.setRevert(true));
-      const tx = libUser.transfer(erc20.address, to, amount);
-      await expect(tx).revertedWith('Token transfer not successfull');
+      await waitTx(mockERC20.setRevert(true));
+      const tx = libUser.transfer(mockERC20.address, to, amount);
+      await expect(tx).revertedWith('Token transfer not successful');
     });
   });
   
   describe('transferFrom', async function () {
     it('Transfer done', async function () {
-      await waitTx(libUser.transferFrom(erc20.address, owner, to, amount));
+      await waitTx(libUser.transferFrom(mockERC20.address, owner, to, amount));
 
-      const _owner = await erc20.owner();
+      const _owner = await mockERC20.owner();
       expect(_owner).equal(owner);
       
-      const _to = await erc20.to();
+      const _to = await mockERC20.to();
       expect(_to).equal(to);
 
-      const _amount = await erc20.amount();
+      const _amount = await mockERC20.amount();
       expect(_amount).equal(amount);
     });
 
     it('Fail', async function () {
-      await waitTx(erc20.setFail(true));
-      const tx = libUser.transferFrom(erc20.address, owner, to, amount);
-      await expect(tx).revertedWith('Token transferFrom not successfull');
+      await waitTx(mockERC20.setFail(true));
+      const tx = libUser.transferFrom(mockERC20.address, owner, to, amount);
+      await expect(tx).revertedWith('Token transferFrom not successful');
     });
 
     it('Revert', async function () {
-      await waitTx(erc20.setRevert(true));
-      const tx = libUser.transferFrom(erc20.address, owner, to, amount);
-      await expect(tx).revertedWith('Token transferFrom not successfull');
+      await waitTx(mockERC20.setRevert(true));
+      const tx = libUser.transferFrom(mockERC20.address, owner, to, amount);
+      await expect(tx).revertedWith('Token transferFrom not successful');
+    });
+  });
+
+  describe('decimals', async function () {
+    it('Should return tokens decimals', async function () {
+      const decimals = await mockERC20.decimals();
+      expect(decimals).equal(18);
+    });
+
+    it('Should return 0 if token doesnt have decimals', async function () {
+      await waitTx(mockERC20.setRevert(true));
+      const decimals = await libUser.decimals(mockERC20.address);
+      expect(decimals).equal(0);
     });
   });
 });
